@@ -6,103 +6,123 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/*
-  FREE PLAN RULE:
-  Fixed ping every 2 minutes
-*/
+/* ================= CONFIG ================= */
 const PING_INTERVAL = 2 * 60 * 1000;
+const TIMEOUT = 5000;
+const MAX_RETRIES = 2;
+const LATENCY_HISTORY = 30;
 
-/*
-  In-memory monitor store (v1)
-  Structure:
-  monitors[name] = {
-    url,
-    timer,
-    lastPing,
-    status
-  }
-*/
+/* ================= STORE ================= */
 const monitors = {};
 
-/* ---------- PING FUNCTION ---------- */
-async function pingService(name, url) {
+/*
+ monitor = {
+   name,
+   url,
+   status,
+   lastPing,
+   uptime,
+   totalPings,
+   failedPings,
+   latencyHistory: [],
+   retryCount
+ }
+*/
+
+/* ================= STATUS ENGINE ================= */
+function evaluateStatus(monitor, success, latency) {
+  monitor.totalPings++;
+
+  if (success) {
+    monitor.retryCount = 0;
+    monitor.status = latency > 1000 ? "DEGRADED" : "UP";
+  } else {
+    monitor.failedPings++;
+    monitor.retryCount++;
+
+    if (monitor.retryCount > MAX_RETRIES) {
+      monitor.status = "DOWN";
+    }
+  }
+
+  monitor.uptime = (
+    ((monitor.totalPings - monitor.failedPings) / monitor.totalPings) * 100
+  ).toFixed(2);
+}
+
+/* ================= PING ================= */
+async function pingMonitor(monitor) {
+  const start = Date.now();
   try {
-    const start = Date.now();
-    const res = await fetch(url, { timeout: 5000 });
+    const res = await fetch(monitor.url, { timeout: TIMEOUT });
     const latency = Date.now() - start;
 
-    monitors[name].status = "UP";
-    monitors[name].lastPing = Date.now();
+    monitor.lastPing = Date.now();
+    monitor.latencyHistory.push(latency);
+    if (monitor.latencyHistory.length > LATENCY_HISTORY) {
+      monitor.latencyHistory.shift();
+    }
 
-    console.log(`🟢 [${name}] UP (${res.status}) ${latency}ms`);
-  } catch (err) {
-    monitors[name].status = "DOWN";
-    monitors[name].lastPing = Date.now();
+    evaluateStatus(monitor, true, latency);
 
-    console.log(`🔴 [${name}] DOWN`);
+    console.log(`🟢 ${monitor.name} ${latency}ms`);
+  } catch {
+    monitor.lastPing = Date.now();
+    evaluateStatus(monitor, false);
+    console.log(`🔴 ${monitor.name} failed`);
   }
 }
 
-/* ---------- ADD MONITOR ---------- */
+/* ================= SCHEDULER ================= */
+setInterval(() => {
+  Object.values(monitors).forEach(pingMonitor);
+}, PING_INTERVAL);
+
+/* ================= API ================= */
+
+/* ADD MONITOR */
 app.post("/api/monitor", (req, res) => {
   const { name, url } = req.body;
 
-  // Validation
   if (!name || !url || !url.startsWith("http")) {
-    return res.status(400).json({
-      message: "Name and valid URL are required."
-    });
+    return res.status(400).json({ message: "Invalid name or URL" });
   }
 
-  // Prevent name collision
   if (monitors[name]) {
-    return res.status(409).json({
-      message: "Monitor name already exists. Choose a unique name."
-    });
+    return res.status(409).json({ message: "Monitor already exists" });
   }
 
-  // Create monitor
   monitors[name] = {
+    name,
     url,
     status: "INIT",
     lastPing: null,
-    timer: null
+    uptime: "100.00",
+    totalPings: 0,
+    failedPings: 0,
+    latencyHistory: [],
+    retryCount: 0
   };
 
-  // Immediate ping
-  pingService(name, url);
-
-  // Schedule ping
-  const timer = setInterval(() => {
-    pingService(name, url);
-  }, PING_INTERVAL);
-
-  monitors[name].timer = timer;
+  pingMonitor(monitors[name]);
 
   res.json({
-    message: `✅ "${name}" is now kept alive (ping every 2 minutes).`
+    message: `✅ ${name} monitoring started`
   });
 });
 
-/* ---------- LIST MONITORS ---------- */
+/* LIST MONITORS */
 app.get("/api/monitors", (req, res) => {
-  const data = Object.entries(monitors).map(([name, m]) => ({
-    name,
-    url: m.url,
-    status: m.status,
-    lastPing: m.lastPing
-  }));
-
-  res.json(data);
+  res.json(Object.values(monitors));
 });
 
-/* ---------- HEALTH CHECK ---------- */
-app.get("/", (req, res) => {
-  res.send("UpWatch backend is running 🚀");
+/* HEALTH */
+app.get("/", (_, res) => {
+  res.send("UpWatch V2 running 🚀");
 });
 
-/* ---------- START SERVER ---------- */
+/* START */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`UpWatch backend running on port ${PORT}`);
+  console.log(`UpWatch backend on ${PORT}`);
 });
