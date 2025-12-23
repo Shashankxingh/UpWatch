@@ -1,175 +1,106 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>UpWatch • System Status</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UpWatch</title>
 
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            primary: "#0d7ff2",
-            bg: "#050A14",
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "sans-serif"],
-          },
-          animation: {
-            float: "float 14s ease-in-out infinite",
-          },
-          keyframes: {
-            float: {
-              "0%,100%": { transform: "translateY(0)" },
-              "50%": { transform: "translateY(-25px)" },
-            },
-          },
-        },
-      },
-    };
-  </script>
-
-  <style>
-    body {
-      background: #050A14;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .glass {
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(22px);
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-
-    #cursor-glow {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background: radial-gradient(
-        800px at 50% 50%,
-        rgba(13,127,242,0.18),
-        rgba(168,85,247,0.12),
-        transparent 70%
-      );
-    }
-  </style>
+<style>
+body {
+  background:#050A14;
+  font-family: "Space Grotesk", sans-serif;
+}
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(22px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.shake { animation: shake .4s; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  50%{transform:translateX(6px)}
+  75%{transform:translateX(-4px)}
+}
+</style>
 </head>
 
-<body class="font-display text-white relative overflow-x-hidden">
+<body class="text-white min-h-screen p-6">
 
-<!-- Cursor Reactive Glow -->
-<div id="cursor-glow"></div>
+<h1 class="text-2xl font-bold mb-6">UpWatch</h1>
 
-<!-- Ambient Blobs -->
-<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-  <div class="absolute -top-1/3 -left-1/4 w-[70%] h-[60%] bg-blue-600/20 rounded-full blur-[140px] animate-float"></div>
-  <div class="absolute bottom-[-30%] right-[-20%] w-[70%] h-[60%] bg-purple-600/20 rounded-full blur-[160px] animate-float"></div>
-</div>
+<div id="box" class="glass max-w-md mx-auto p-5 rounded-2xl space-y-3">
 
-<!-- App -->
-<div class="relative z-10 min-h-screen pb-20">
+  <label class="text-xs text-white/60">
+    Name <span class="text-red-400">*</span>
+  </label>
+  <input
+    id="name"
+    placeholder="My Telegram Bot"
+    class="w-full bg-transparent border border-white/10 p-2 rounded outline-none"
+  />
 
-  <!-- Header -->
-  <header class="sticky top-0 glass px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <span class="material-symbols-outlined text-primary text-3xl">monitoring</span>
-      <div>
-        <h1 class="text-lg font-bold">UpWatch</h1>
-        <p class="text-xs text-white/50">Updated just now</p>
-      </div>
-    </div>
-    <span class="text-emerald-400 text-sm font-semibold flex items-center gap-2">
-      <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-      All Systems Operational
-    </span>
-  </header>
+  <label class="text-xs text-white/60">
+    URL <span class="text-red-400">*</span>
+  </label>
+  <input
+    id="url"
+    placeholder="https://my-bot.onrender.com"
+    class="w-full bg-transparent border border-white/10 p-2 rounded outline-none"
+  />
 
-  <!-- Stats -->
-  <section class="px-6 mt-6 grid grid-cols-2 gap-4">
-    <div class="glass p-4 rounded-2xl">
-      <p class="text-xs text-white/50">Global Uptime</p>
-      <p class="text-2xl font-bold">99.99%</p>
-    </div>
-    <div class="glass p-4 rounded-2xl">
-      <p class="text-xs text-white/50">Avg Latency</p>
-      <p class="text-2xl font-bold">38ms</p>
-    </div>
-  </section>
+  <button
+    id="btn"
+    class="w-full bg-blue-500 hover:bg-blue-600 text-black font-semibold py-2 rounded transition"
+  >
+    Start Pinging
+  </button>
 
-  <!-- Monitors -->
-  <section class="px-6 mt-8 space-y-4">
-
-    <!-- Card -->
-    <div class="glass p-5 rounded-2xl flex justify-between items-center">
-      <div>
-        <h3 class="font-semibold">Payment Gateway</h3>
-        <p class="text-xs text-emerald-400">Operational • us-east</p>
-      </div>
-      <p class="text-3xl font-bold">24<span class="text-sm text-white/50">ms</span></p>
-    </div>
-
-    <div class="glass p-5 rounded-2xl flex justify-between items-center">
-      <div>
-        <h3 class="font-semibold">User Database</h3>
-        <p class="text-xs text-yellow-400">Degraded • eu-west</p>
-      </div>
-      <p class="text-3xl font-bold">320<span class="text-sm text-white/50">ms</span></p>
-    </div>
-
-    <div class="glass p-5 rounded-2xl flex justify-between items-center opacity-70">
-      <div>
-        <h3 class="font-semibold">CDN Node #4</h3>
-        <p class="text-xs text-white/50">Maintenance</p>
-      </div>
-      <p class="text-3xl font-bold">--</p>
-    </div>
-
-  </section>
+  <p id="msg" class="text-sm text-white/60"></p>
 
 </div>
 
-<!-- Cursor Glow Logic -->
 <script>
-  const glow = document.getElementById("cursor-glow");
-  let x = window.innerWidth / 2;
-  let y = window.innerHeight / 2;
-  let tx = x, ty = y;
+/*
+ WHY BACKEND URL IS HERE:
+ Browser JS must know WHERE to send requests.
+ This is how EVERY website works.
+*/
+const BACKEND_URL = "https://YOUR-BACKEND.onrender.com";
 
-  function loop() {
-    x += (tx - x) * 0.08;
-    y += (ty - y) * 0.08;
+const btn = document.getElementById("btn");
+const msg = document.getElementById("msg");
+const box = document.getElementById("box");
 
-    glow.style.background =
-      `radial-gradient(800px at ${x}px ${y}px,
-        rgba(13,127,242,0.20),
-        rgba(168,85,247,0.14),
-        transparent 70%)`;
+btn.onclick = async () => {
+  const name = document.getElementById("name").value.trim();
+  const url = document.getElementById("url").value.trim();
 
-    requestAnimationFrame(loop);
+  if (!name || !url || !url.startsWith("http")) {
+    box.classList.add("shake");
+    msg.textContent = "⭐ Name and valid URL are required";
+    setTimeout(() => box.classList.remove("shake"), 400);
+    return;
   }
-  loop();
 
-  window.addEventListener("mousemove", e => {
-    tx = e.clientX;
-    ty = e.clientY;
-  });
+  msg.textContent = "Starting keep-alive service…";
 
-  window.addEventListener("touchmove", e => {
-    if (e.touches.length) {
-      tx = e.touches[0].clientX;
-      ty = e.touches[0].clientY;
-    }
-  }, { passive: true });
+  try {
+    const res = await fetch(BACKEND_URL + "/api/monitor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, url })
+    });
+
+    const data = await res.json();
+    msg.textContent = data.message;
+  } catch {
+    msg.textContent = "❌ Backend not reachable";
+  }
+};
 </script>
 
 </body>
