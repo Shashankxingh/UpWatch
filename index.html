@@ -3,98 +3,202 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>UpWatch</title>
+<title>UpWatch • Keep Services Alive</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap" rel="stylesheet"/>
+
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#0d7ff2",
+        bg: "#050A14",
+      },
+      fontFamily: {
+        display: ["Space Grotesk", "sans-serif"],
+      },
+      animation: {
+        float: "float 14s ease-in-out infinite",
+        glow: "glow 2s ease-in-out infinite",
+      },
+      keyframes: {
+        float: {
+          "0%,100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-25px)" },
+        },
+        glow: {
+          "0%,100%": { boxShadow: "0 0 0 rgba(13,127,242,.0)" },
+          "50%": { boxShadow: "0 0 30px rgba(13,127,242,.5)" },
+        }
+      },
+    },
+  },
+};
+</script>
 
 <style>
 body {
   background:#050A14;
-  font-family: "Space Grotesk", sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
+
 .glass {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.035);
   backdrop-filter: blur(22px);
   border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
-.shake { animation: shake .4s; }
+
+#cursor-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shake {
+  animation: shake .4s;
+}
 @keyframes shake {
   0%,100%{transform:translateX(0)}
-  25%{transform:translateX(-6px)}
-  50%{transform:translateX(6px)}
+  25%{transform:translateX(-7px)}
+  50%{transform:translateX(7px)}
   75%{transform:translateX(-4px)}
 }
 </style>
 </head>
 
-<body class="text-white min-h-screen p-6">
+<body class="font-display text-white overflow-x-hidden">
 
-<h1 class="text-2xl font-bold mb-6">UpWatch</h1>
+<!-- Cursor Glow -->
+<div id="cursor-glow"></div>
 
-<div id="box" class="glass max-w-md mx-auto p-5 rounded-2xl space-y-3">
+<!-- Ambient Blobs -->
+<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+  <div class="absolute -top-1/3 -left-1/4 w-[70%] h-[60%] bg-blue-600/20 rounded-full blur-[150px] animate-float"></div>
+  <div class="absolute bottom-[-30%] right-[-20%] w-[70%] h-[60%] bg-purple-600/20 rounded-full blur-[180px] animate-float"></div>
+</div>
 
-  <label class="text-xs text-white/60">
-    Name <span class="text-red-400">*</span>
-  </label>
-  <input
-    id="name"
-    placeholder="My Telegram Bot"
-    class="w-full bg-transparent border border-white/10 p-2 rounded outline-none"
-  />
+<div class="relative z-10 min-h-screen pb-24">
 
-  <label class="text-xs text-white/60">
-    URL <span class="text-red-400">*</span>
-  </label>
-  <input
-    id="url"
-    placeholder="https://my-bot.onrender.com"
-    class="w-full bg-transparent border border-white/10 p-2 rounded outline-none"
-  />
+<!-- Header -->
+<header class="sticky top-0 glass px-6 py-4 flex justify-between items-center">
+  <div class="flex items-center gap-3">
+    <span class="material-symbols-outlined text-primary text-3xl">monitoring</span>
+    <div>
+      <h1 class="text-lg font-bold tracking-wide">UpWatch</h1>
+      <p class="text-xs text-white/50">Free keep-alive service</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+    Online
+  </div>
+</header>
 
-  <button
-    id="btn"
-    class="w-full bg-blue-500 hover:bg-blue-600 text-black font-semibold py-2 rounded transition"
-  >
-    Start Pinging
-  </button>
+<!-- Hero -->
+<section class="px-6 mt-10 text-center">
+  <h2 class="text-3xl font-bold tracking-tight">
+    Never let your <span class="text-primary">Render apps</span> sleep
+  </h2>
+  <p class="text-white/60 mt-2 text-sm">
+    Paste your service URL and we’ll keep it alive — like UptimeRobot, but simpler.
+  </p>
+</section>
 
-  <p id="msg" class="text-sm text-white/60"></p>
+<!-- Add Monitor Card -->
+<section class="px-6 mt-10">
+  <div id="add-box" class="glass max-w-xl mx-auto p-6 rounded-3xl space-y-4 transition-all">
+
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">add_circle</span>
+      <h3 class="font-semibold">Add Monitor</h3>
+    </div>
+
+    <div>
+      <label class="text-xs text-white/60">
+        Name <span class="text-red-400">*</span>
+      </label>
+      <input
+        id="monitor-name"
+        placeholder="My Telegram Bot"
+        class="mt-1 w-full bg-transparent border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+      />
+    </div>
+
+    <div>
+      <label class="text-xs text-white/60">
+        URL <span class="text-red-400">*</span>
+      </label>
+      <input
+        id="monitor-url"
+        placeholder="https://my-bot.onrender.com"
+        class="mt-1 w-full bg-transparent border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+      />
+    </div>
+
+    <button
+      id="add-monitor"
+      class="w-full mt-2 bg-primary hover:bg-blue-500 text-black font-semibold py-3 rounded-xl transition animate-glow"
+    >
+      Start Keep-Alive
+    </button>
+
+    <p id="monitor-msg" class="text-center text-sm text-white/60"></p>
+  </div>
+</section>
 
 </div>
 
+<!-- JS -->
 <script>
-/*
- WHY BACKEND URL IS HERE:
- Browser JS must know WHERE to send requests.
- This is how EVERY website works.
-*/
+/* CURSOR GLOW */
+const glow = document.getElementById("cursor-glow");
+let x = innerWidth/2, y = innerHeight/2, tx=x, ty=y;
+(function loop(){
+  x += (tx-x)*0.08;
+  y += (ty-y)*0.08;
+  glow.style.background =
+    `radial-gradient(800px at ${x}px ${y}px,
+      rgba(13,127,242,0.20),
+      rgba(168,85,247,0.15),
+      transparent 70%)`;
+  requestAnimationFrame(loop);
+})();
+addEventListener("mousemove",e=>{tx=e.clientX;ty=e.clientY});
+addEventListener("touchmove",e=>{
+  if(e.touches[0]){tx=e.touches[0].clientX;ty=e.touches[0].clientY}
+},{passive:true});
+
+/* BACKEND CONNECT */
 const BACKEND_URL = "https://YOUR-BACKEND.onrender.com";
+const box = document.getElementById("add-box");
+const msg = document.getElementById("monitor-msg");
 
-const btn = document.getElementById("btn");
-const msg = document.getElementById("msg");
-const box = document.getElementById("box");
-
-btn.onclick = async () => {
-  const name = document.getElementById("name").value.trim();
-  const url = document.getElementById("url").value.trim();
+document.getElementById("add-monitor").onclick = async () => {
+  const name = document.getElementById("monitor-name").value.trim();
+  const url = document.getElementById("monitor-url").value.trim();
 
   if (!name || !url || !url.startsWith("http")) {
     box.classList.add("shake");
-    msg.textContent = "⭐ Name and valid URL are required";
-    setTimeout(() => box.classList.remove("shake"), 400);
+    msg.textContent = "⭐ Name and valid URL required";
+    setTimeout(()=>box.classList.remove("shake"),400);
     return;
   }
 
-  msg.textContent = "Starting keep-alive service…";
+  msg.textContent = "Activating keep-alive…";
 
   try {
     const res = await fetch(BACKEND_URL + "/api/monitor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ name, url })
     });
-
     const data = await res.json();
     msg.textContent = data.message;
   } catch {
