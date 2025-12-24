@@ -1,36 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UpWatch Enterprise</title>
+<title>UpWatch // NEON PROTOCOL</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <script>
 tailwind.config = {
-  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        orbitron: ['Orbitron', 'sans-serif'],
+        rajdhani: ['Rajdhani', 'sans-serif'],
       },
       colors: {
-        background: "#030712", // Deepest black/blue
-        surface: "#111827",
-        border: "#1f2937",
-        accent: "#3b82f6",
-        success: "#22c55e",
-        warning: "#eab308",
-        danger: "#ef4444",
+        neonBlue: "#00f3ff",
+        neonPink: "#ff00ff",
+        neonPurple: "#bc13fe",
+        darkBg: "#050510"
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'spin-slow': 'spin 8s linear infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'glitch': 'glitch 1s linear infinite',
+      },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
       }
     }
   }
@@ -38,207 +40,259 @@ tailwind.config = {
 </script>
 
 <style>
-  body { background-color: #030712; color: #e5e7eb; -webkit-font-smoothing: antialiased; }
-  
-  /* Utility Classes */
-  .panel {
-    background: linear-gradient(145deg, #111827, #0f172a);
-    border: 1px solid #1f2937;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  body {
+    background-color: #050510;
+    color: white;
+    overflow-x: hidden;
+    cursor: none; /* We will use custom cursor */
   }
-  
-  .status-dot { box-shadow: 0 0 10px currentColor; }
-  
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #030712; }
-  ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
 
-  .input-focus:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6, 0 0 0 4px rgba(59, 130, 246, 0.1);
+  /* --- ANIMATED BACKGROUND --- */
+  .bg-grid {
+    position: fixed;
+    top: 0; left: 0; width: 200%; height: 200%;
+    background-image: 
+      linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(188, 19, 254, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+    animation: gridMove 20s linear infinite;
+    z-index: -2;
+    pointer-events: none;
   }
+
+  @keyframes gridMove {
+    0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+    100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+  }
+
+  .glow-orb {
+    position: fixed;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(188,19,254,0.2) 0%, rgba(0,0,0,0) 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* --- RGB BORDER CARDS --- */
+  .rgb-card {
+    position: relative;
+    background: rgba(10, 10, 25, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    z-index: 1;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .rgb-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(transparent, #00f3ff, transparent 30%);
+    animation: rotate 4s linear infinite;
+    z-index: -2;
+  }
+  
+  .rgb-card::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: rgba(10, 10, 25, 0.9);
+    border-radius: 14px;
+    z-index: -1;
+  }
+
+  .rgb-card:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+  }
+
+  @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+  /* --- CUSTOM CURSOR --- */
+  .cursor-dot, .cursor-circle {
+    position: fixed;
+    top: 0; left: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 9999;
+    border-radius: 50%;
+  }
+  .cursor-dot { width: 8px; height: 8px; background: white; }
+  .cursor-circle { 
+    width: 40px; height: 40px; 
+    border: 2px solid #00f3ff;
+    transition: width 0.2s, height 0.2s;
+  }
+  
+  /* --- ANIME MASCOT --- */
+  .mascot {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    background-image: url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcjZ3eHoxOGk5eHR5eHpmNnZ4Z3F6eHR5eHpmNnZ4Z3F6eHR5eHpmNnZ4ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/13CoXDiaCcCoyk/giphy.gif'); 
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 50;
+    transition: top 0.5s ease-out, left 0.5s ease-out;
+  }
+
 </style>
 </head>
 
-<body class="h-screen flex overflow-hidden selection:bg-accent selection:text-white">
+<body class="font-rajdhani text-lg">
 
-<aside class="w-64 border-r border-border bg-[#050b1a] flex flex-col hidden md:flex">
-  <div class="p-6 flex items-center gap-3">
-    <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white font-bold">U</div>
-    <span class="font-bold text-lg tracking-tight">UpWatch_</span>
-  </div>
+<div class="bg-grid"></div>
+<div class="glow-orb"></div>
+<div id="cursor-dot" class="cursor-dot"></div>
+<div id="cursor-circle" class="cursor-circle"></div>
 
-  <nav class="flex-1 px-4 space-y-1">
-    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium bg-accent/10 text-accent rounded-md">
-      <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
-    </a>
-    <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-md transition">
-      <i data-lucide="activity" class="w-4 h-4"></i> Incidents
-    </a>
-  </nav>
+<div id="mascot" class="mascot bottom-4 right-4 animate-float"></div>
 
-  <div class="p-4 border-t border-border">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500"></div>
-      <div>
-        <div class="text-sm font-medium text-white">Admin User</div>
-        <div class="text-xs text-gray-500">Pro Plan</div>
-      </div>
-    </div>
-  </div>
-</aside>
-
-<main class="flex-1 flex flex-col h-full relative overflow-hidden">
+<div class="relative z-10 p-6 md:p-12 max-w-7xl mx-auto">
   
-  <header class="h-16 border-b border-border flex items-center justify-between px-8 bg-[#030712]/80 backdrop-blur-md z-10">
-    <div class="flex items-center gap-4">
-      <h1 class="font-semibold text-white">Overview</h1>
-      <span class="h-4 w-px bg-border"></span>
-      <div id="global-status" class="flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full bg-gray-800 text-gray-400 border border-gray-700">
-        Initializing...
+  <header class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+    <div>
+      <h1 class="font-orbitron text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neonBlue via-white to-neonPink drop-shadow-[0_0_10px_rgba(0,243,255,0.8)]">
+        UPWATCH
+      </h1>
+      <p class="text-neonBlue tracking-[0.3em] font-bold mt-2 uppercase">System Monitor // v.9.0</p>
+    </div>
+
+    <div class="flex gap-6">
+      <div class="bg-black/40 border border-neonPink/50 p-4 rounded-lg shadow-[0_0_15px_rgba(255,0,255,0.2)] backdrop-blur-md text-center">
+        <div class="text-xs text-neonPink uppercase tracking-widest">Active Nodes</div>
+        <div id="stat-total" class="text-3xl font-orbitron font-bold text-white">0</div>
+      </div>
+      <div class="bg-black/40 border border-neonBlue/50 p-4 rounded-lg shadow-[0_0_15px_rgba(0,243,255,0.2)] backdrop-blur-md text-center">
+        <div class="text-xs text-neonBlue uppercase tracking-widest">Sys Integrity</div>
+        <div id="stat-uptime" class="text-3xl font-orbitron font-bold text-white">0%</div>
       </div>
     </div>
-    
-    <button onclick="document.getElementById('addModal').classList.remove('hidden')" 
-            class="bg-white text-black hover:bg-gray-200 px-4 py-1.5 rounded-md text-sm font-medium transition flex items-center gap-2">
-      <i data-lucide="plus" class="w-4 h-4"></i> Add Monitor
-    </button>
   </header>
 
-  <div class="flex-1 overflow-y-auto p-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="panel rounded-xl p-5 relative overflow-hidden group">
-        <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition transform group-hover:scale-110">
-           <i data-lucide="globe" class="w-16 h-16 text-white"></i>
-        </div>
-        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Total Monitors</div>
-        <div class="text-3xl font-bold text-white" id="stat-total">0</div>
-      </div>
-      
-      <div class="panel rounded-xl p-5 relative overflow-hidden">
-        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Avg. Uptime</div>
-        <div class="text-3xl font-bold text-white flex items-end gap-2">
-          <span id="stat-uptime">--%</span>
-        </div>
-      </div>
-
-      <div class="panel rounded-xl p-5 relative overflow-hidden">
-        <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Active Incidents</div>
-        <div class="text-3xl font-bold text-white" id="stat-incidents">0</div>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-white">Active Monitors</h2>
-    </div>
-
-    <div id="grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      </div>
+  <div class="mb-12 flex justify-end">
+    <button onclick="toggleModal()" class="group relative px-8 py-3 bg-transparent border border-neonBlue text-neonBlue font-bold uppercase tracking-widest hover:bg-neonBlue hover:text-black transition-all duration-300 overflow-hidden">
+      <span class="relative z-10 flex items-center gap-2">
+        <i data-lucide="plus-square"></i> Initialize Node
+      </span>
+      <div class="absolute inset-0 bg-neonBlue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+    </button>
   </div>
-</main>
 
-<div id="addModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-  <div class="panel w-full max-w-md rounded-xl p-6 shadow-2xl border border-white/10 transform transition-all scale-100">
-    <div class="flex justify-between items-center mb-6">
-      <h3 class="text-lg font-semibold text-white">New Monitor</h3>
-      <button onclick="document.getElementById('addModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
+  <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
     </div>
-    <div class="space-y-4">
+
+</div>
+
+<div id="addModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+  <div class="rgb-card w-full max-w-lg p-8 transform scale-100">
+    <h2 class="text-2xl font-orbitron text-white mb-6 border-b border-white/20 pb-2">
+      <span class="text-neonPink">></span> NEW TARGET
+    </h2>
+    
+    <div class="space-y-6">
       <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Display Name</label>
-        <input id="input-name" class="w-full bg-[#050b1a] border border-border rounded-lg px-4 py-2.5 text-white text-sm input-focus" placeholder="e.g. Production API">
+        <label class="text-neonBlue text-sm uppercase tracking-wider">Target Identifier</label>
+        <input id="input-name" class="w-full bg-black/50 border border-white/20 rounded p-3 text-white focus:border-neonBlue focus:outline-none focus:shadow-[0_0_10px_#00f3ff]" placeholder="SERVER_01">
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Endpoint URL</label>
-        <div class="relative">
-          <span class="absolute left-4 top-2.5 text-gray-500 text-sm">GET</span>
-          <input id="input-url" class="w-full bg-[#050b1a] border border-border rounded-lg pl-14 pr-4 py-2.5 text-white text-sm input-focus" placeholder="https://api.example.com">
-        </div>
+        <label class="text-neonBlue text-sm uppercase tracking-wider">Endpoint Vector</label>
+        <input id="input-url" class="w-full bg-black/50 border border-white/20 rounded p-3 text-white focus:border-neonBlue focus:outline-none focus:shadow-[0_0_10px_#00f3ff]" placeholder="https://api.system.com">
       </div>
-      <button id="btn-add" class="w-full bg-white hover:bg-gray-200 text-black font-semibold py-2.5 rounded-lg transition mt-2">
-        Start Monitoring
-      </button>
+      <div class="flex gap-4 mt-8">
+        <button onclick="toggleModal()" class="flex-1 py-3 border border-red-500 text-red-500 hover:bg-red-500 hover:text-black uppercase font-bold transition">Abort</button>
+        <button id="btn-add" class="flex-1 py-3 bg-neonBlue text-black font-bold uppercase hover:bg-white hover:shadow-[0_0_20px_#00f3ff] transition">Execute</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// UPDATED: Points to your live backend
 const API = "https://upwatch.onrender.com";
-
 lucide.createIcons();
 
-// --- SVG SPARKLINE GENERATOR ---
-function generateSparkline(data, width = 300, height = 50) {
-  if (!data || data.length < 2) return "";
-  const max = Math.max(...data, 100); 
-  const min = 0;
-  const range = max - min;
-  const stepX = width / (data.length - 1);
-  
-  const pathPoints = data.map((val, i) => {
-    const x = i * stepX;
-    const y = height - ((val - min) / range) * height;
-    return `${x},${y}`;
-  });
+/* --- CURSOR LOGIC --- */
+const cursorDot = document.getElementById('cursor-dot');
+const cursorCircle = document.getElementById('cursor-circle');
+const mascot = document.getElementById('mascot');
 
-  return `
-    <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="grad-${data[0]}" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:currentColor;stop-opacity:0.2" />
-          <stop offset="100%" style="stop-color:currentColor;stop-opacity:0" />
-        </linearGradient>
-      </defs>
-      <path d="M0,${height} L${pathPoints.join(' L')} L${width},${height} Z" fill="currentColor" fill-opacity="0.1" stroke="none" />
-      <path d="M${pathPoints.join(' L')}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" />
-    </svg>
-  `;
+window.addEventListener('mousemove', (e) => {
+  const x = e.clientX;
+  const y = e.clientY;
+  
+  cursorDot.style.left = `${x}px`;
+  cursorDot.style.top = `${y}px`;
+  
+  // Circle follows with lag
+  cursorCircle.animate({
+    left: `${x}px`,
+    top: `${y}px`
+  }, { duration: 500, fill: "forwards" });
+});
+
+// Click Interaction (Move Mascot)
+window.addEventListener('click', (e) => {
+  cursorCircle.style.transform = "translate(-50%, -50%) scale(0.5)";
+  setTimeout(() => cursorCircle.style.transform = "translate(-50%, -50%) scale(1)", 100);
+
+  // Move mascot near click
+  mascot.style.top = `${e.clientY - 50}px`;
+  mascot.style.left = `${e.clientX - 50}px`;
+});
+
+function toggleModal() {
+  document.getElementById('addModal').classList.toggle('hidden');
 }
 
-// Maps backend status (UP/DOWN) to Frontend Style (OPERATIONAL/DOWN)
-function getStatusConfig(status) {
+/* --- LOGIC --- */
+function getStatusVisuals(status) {
   const s = status.toUpperCase();
-  if (s === 'UP' || s === 'OPERATIONAL') return { color: 'text-success', bg: 'bg-success', label: 'Operational' };
-  if (s === 'DEGRADED') return { color: 'text-warning', bg: 'bg-warning', label: 'Degraded' };
-  if (s === 'DOWN') return { color: 'text-danger', bg: 'bg-danger', label: 'System Down' };
-  return { color: 'text-gray-400', bg: 'bg-gray-400', label: 'Pending' };
+  if (s === 'UP' || s === 'OPERATIONAL') 
+    return { color: 'text-neonBlue', shadow: 'shadow-[0_0_10px_#00f3ff]', icon: 'check-circle' };
+  if (s === 'DOWN') 
+    return { color: 'text-red-500', shadow: 'shadow-[0_0_10px_#ef4444]', icon: 'alert-octagon' };
+  return { color: 'text-yellow-400', shadow: 'none', icon: 'loader' };
 }
 
 function renderCard(m) {
-  const config = getStatusConfig(m.status);
-  const lastLatency = m.latencyHistory && m.latencyHistory.length ? m.latencyHistory.at(-1) : 0;
-  const sparklineSVG = generateSparkline(m.latencyHistory || []);
+  const vis = getStatusVisuals(m.status);
+  const latency = m.latencyHistory?.length ? m.latencyHistory.at(-1) : 0;
+  
+  // Fake graph bars for "Cyber" look
+  const bars = Array(10).fill(0).map(() => 
+    `<div class="w-1 bg-white/20 h-[${Math.random() * 100}%] rounded-sm"></div>`
+  ).join('');
 
   return `
-  <div class="panel rounded-xl p-5 transition hover:border-gray-500">
-    <div class="flex justify-between items-start mb-4">
+  <div class="rgb-card p-6 flex flex-col justify-between group">
+    <div class="flex justify-between items-start">
       <div>
-        <div class="flex items-center gap-2 mb-1">
-          <div class="w-2 h-2 rounded-full ${config.bg} status-dot animate-pulse"></div>
-          <h3 class="font-semibold text-sm text-white">${m.name}</h3>
-        </div>
-        <a href="${m.url}" target="_blank" class="text-xs text-gray-500 hover:text-accent truncate max-w-[150px] block">${m.url}</a>
+        <h3 class="font-orbitron text-xl text-white tracking-wide">${m.name}</h3>
+        <p class="text-xs text-white/50 font-mono mt-1 break-all">${m.url}</p>
+      </div>
+      <i data-lucide="${vis.icon}" class="${vis.color} w-6 h-6 animate-pulse"></i>
+    </div>
+
+    <div class="my-6 h-16 flex items-end gap-1 opacity-50">
+      ${m.latencyHistory ? m.latencyHistory.slice(-15).map(val => {
+         const h = Math.min(val / 10, 100); 
+         return `<div class="flex-1 bg-${vis.color === 'text-neonBlue' ? 'neonBlue' : 'red-500'} transition-all duration-300" style="height: ${h}%; box-shadow: 0 0 5px currentColor"></div>`
+      }).join('') : ''}
+    </div>
+
+    <div class="flex items-center justify-between pt-4 border-t border-white/10">
+      <div class="font-orbitron text-2xl ${vis.color} drop-shadow-[0_0_5px_currentColor]">
+        ${latency} <span class="text-sm text-white/50">ms</span>
       </div>
       <div class="text-right">
-        <div class="text-xs text-gray-400 font-mono">UPTIME</div>
-        <div class="font-bold text-white ${parseFloat(m.uptime) < 99 ? 'text-warning' : ''}">${m.uptime}%</div>
-      </div>
-    </div>
-    <div class="h-12 w-full mb-4 ${config.color}">
-      ${sparklineSVG}
-    </div>
-    <div class="flex items-center justify-between pt-3 border-t border-white/5">
-      <div class="flex items-center gap-2 text-xs text-gray-400">
-        <i data-lucide="clock" class="w-3 h-3"></i>
-        ${m.lastPing ? new Date(m.lastPing).toLocaleTimeString() : "Syncing..."}
-      </div>
-      <div class="text-sm font-mono font-medium ${lastLatency > 500 ? 'text-warning' : 'text-gray-300'}">
-        ${lastLatency}ms
+        <div class="text-xs text-white/40 uppercase">Uptime</div>
+        <div class="font-bold text-white">${m.uptime}%</div>
       </div>
     </div>
   </div>`;
@@ -249,90 +303,48 @@ async function load() {
     const res = await fetch(API + "/api/monitors");
     const rawData = await res.json();
     
-    // ADAPTER: Handle both Old Backend (Array) and New Backend (Object)
-    let monitors = [];
-    let stats = { total: 0, down: 0 };
-
-    if (Array.isArray(rawData)) {
-      monitors = rawData;
-      stats.total = monitors.length;
-      stats.down = monitors.filter(m => m.status === 'DOWN').length;
-      // Calculate avg uptime manually for old backend
-      const totalUptime = monitors.reduce((acc, m) => acc + parseFloat(m.uptime || 0), 0);
-      stats.uptime = monitors.length ? (totalUptime / monitors.length).toFixed(2) : "0.00";
-    } else {
-      monitors = rawData.monitors;
-      stats = rawData.stats;
-      // If new backend doesn't send avg uptime, calculate it
-      if(!stats.uptime) {
-         const totalUptime = monitors.reduce((acc, m) => acc + parseFloat(m.uptime || 0), 0);
-         stats.uptime = monitors.length ? (totalUptime / monitors.length).toFixed(2) : "0.00";
-      }
-    }
-
-    // Update Widgets
-    document.getElementById('stat-total').innerText = stats.total;
-    document.getElementById('stat-incidents').innerText = stats.down;
-    document.getElementById('stat-uptime').innerText = stats.uptime + "%";
+    // Adapter logic
+    let monitors = Array.isArray(rawData) ? rawData : rawData.monitors;
+    let total = monitors.length;
+    let down = monitors.filter(m => m.status === 'DOWN').length;
     
-    // Update Header Status
-    const globalEl = document.getElementById('global-status');
-    if (stats.down > 0) {
-      globalEl.className = "flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full bg-danger/10 text-danger border border-danger/20";
-      globalEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3"></i> ${stats.down} Systems Down`;
-    } else {
-      globalEl.className = "flex items-center gap-2 text-xs font-medium px-2 py-1 rounded-full bg-success/10 text-success border border-success/20";
-      globalEl.innerHTML = `<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-success"></span></span> All Systems Operational`;
-    }
+    // Calculate uptime
+    const totalUptime = monitors.reduce((acc, m) => acc + parseFloat(m.uptime || 0), 0);
+    const avgUptime = monitors.length ? (totalUptime / monitors.length).toFixed(2) : "0.00";
 
-    // Render Grid
+    document.getElementById('stat-total').innerText = total;
+    document.getElementById('stat-uptime').innerText = avgUptime + "%";
+
     const grid = document.getElementById("grid");
-    grid.innerHTML = monitors.length 
-      ? monitors.map(renderCard).join("") 
-      : `<div class="col-span-full py-12 text-center text-gray-500 border border-dashed border-white/10 rounded-xl">
-           <i data-lucide="server" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-           <p>No monitors active. Add one to start.</p>
-         </div>`;
-         
+    grid.innerHTML = monitors.map(renderCard).join("");
     lucide.createIcons();
     
   } catch (e) {
-    console.error("Sync failed", e);
+    console.log(e);
   }
 }
 
 document.getElementById('btn-add').onclick = async () => {
   const name = document.getElementById('input-name').value;
   const url = document.getElementById('input-url').value;
-  const btn = document.getElementById('btn-add');
-
   if (!name || !url) return;
-
-  btn.innerHTML = "Adding...";
-  btn.disabled = true;
-
-  try {
-    await fetch(API + "/api/monitor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, url })
-    });
-  } catch(e) {
-    console.error(e);
-    alert("Failed to add monitor. Check console.");
-  }
-
-  document.getElementById('addModal').classList.add('hidden');
-  document.getElementById('input-name').value = "";
-  document.getElementById('input-url').value = "";
-  btn.innerHTML = "Start Monitoring";
-  btn.disabled = false;
   
+  const btn = document.getElementById('btn-add');
+  btn.innerText = "EXECUTING...";
+  
+  await fetch(API + "/api/monitor", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, url })
+  });
+
+  toggleModal();
+  btn.innerText = "EXECUTE";
   load();
 };
 
 load();
-setInterval(load, 2000); 
+setInterval(load, 3000);
 </script>
 
 </body>
