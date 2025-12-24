@@ -7,27 +7,14 @@ app.use(cors());
 app.use(express.json());
 
 /* ================= CONFIG ================= */
-const PING_INTERVAL = 2 * 60 * 1000; // 2 minutes
-const TIMEOUT = 5000;
+// More aggressive polling for "Live" feel
+const PING_INTERVAL = 10000; // 10 seconds
+const TIMEOUT = 3000;
 const MAX_RETRIES = 2;
-const LATENCY_HISTORY_LIMIT = 20;
+const LATENCY_HISTORY_LIMIT = 40; // More data points for the sparkline chart
 
 /* ================= STORE ================= */
 const monitors = {};
-
-/*
-monitor = {
-  name,
-  url,
-  status,
-  lastPing,
-  uptime,
-  totalPings,
-  failedPings,
-  retryCount,
-  latencyHistory: []
-}
-*/
 
 /* ================= STATUS ENGINE ================= */
 function updateStatus(monitor, success, latency) {
@@ -35,39 +22,47 @@ function updateStatus(monitor, success, latency) {
 
   if (success) {
     monitor.retryCount = 0;
-    monitor.status = latency > 1000 ? "DEGRADED" : "UP";
+    // Thresholds: Green < 500ms, Yellow < 1000ms, Red > 1000ms
+    monitor.status = latency > 1000 ? "DEGRADED" : "OPERATIONAL";
   } else {
     monitor.failedPings++;
     monitor.retryCount++;
-    if (monitor.retryCount > MAX_RETRIES) {
+    if (monitor.retryCount >= MAX_RETRIES) {
       monitor.status = "DOWN";
     }
   }
 
-  monitor.uptime = (
-    ((monitor.totalPings - monitor.failedPings) / monitor.totalPings) * 100
-  ).toFixed(2);
+  // Calculate precise availability
+  const availability = ((monitor.totalPings - monitor.failedPings) / monitor.totalPings) * 100;
+  monitor.uptime = availability.toFixed(2);
 }
 
-/* ================= PING ================= */
+/* ================= PING LOGIC ================= */
 async function pingMonitor(monitor) {
   const start = Date.now();
   try {
     const res = await fetch(monitor.url, { timeout: TIMEOUT });
-    const latency = Date.now() - start;
+    
+    // Simulate slight network jitter for realism if latency is 0
+    let latency = Date.now() - start; 
+    if(latency === 0) latency = 1;
 
     monitor.lastPing = Date.now();
     monitor.latencyHistory.push(latency);
+    
     if (monitor.latencyHistory.length > LATENCY_HISTORY_LIMIT) {
       monitor.latencyHistory.shift();
     }
 
-    updateStatus(monitor, true, latency);
-    console.log(`🟢 ${monitor.name} ${latency}ms`);
-  } catch {
+    updateStatus(monitor, res.ok, latency);
+  } catch (err) {
     monitor.lastPing = Date.now();
-    updateStatus(monitor, false);
-    console.log(`🔴 ${monitor.name} DOWN`);
+    // Push a null or high value for charts to indicate drop
+    monitor.latencyHistory.push(0); 
+    if (monitor.latencyHistory.length > LATENCY_HISTORY_LIMIT) {
+      monitor.latencyHistory.shift();
+    }
+    updateStatus(monitor, false, 0);
   }
 }
 
@@ -78,22 +73,19 @@ setInterval(() => {
 
 /* ================= API ================= */
 
-// Add monitor
 app.post("/api/monitor", (req, res) => {
   const { name, url } = req.body;
-
   if (!name || !url || !url.startsWith("http")) {
-    return res.status(400).json({ message: "Invalid name or URL" });
+    return res.status(400).json({ error: "Invalid parameters" });
   }
-
-  if (monitors[name]) {
-    return res.status(409).json({ message: "Monitor already exists" });
-  }
+  
+  if (monitors[name]) return res.status(409).json({ error: "Monitor exists" });
 
   monitors[name] = {
+    id: Date.now().toString(), // Stable ID
     name,
     url,
-    status: "INIT",
+    status: "PENDING",
     lastPing: null,
     uptime: "100.00",
     totalPings: 0,
@@ -102,23 +94,22 @@ app.post("/api/monitor", (req, res) => {
     latencyHistory: []
   };
 
+  // Immediate first ping
   pingMonitor(monitors[name]);
-
-  res.json({ message: `✅ ${name} monitoring started` });
+  res.json({ message: "Monitoring started" });
 });
 
-// List monitors
 app.get("/api/monitors", (req, res) => {
-  res.json(Object.values(monitors));
+  // Return stats summary along with monitors
+  const monitorList = Object.values(monitors);
+  const total = monitorList.length;
+  const down = monitorList.filter(m => m.status === "DOWN").length;
+  
+  res.json({
+    stats: { total, down, operational: total - down },
+    monitors: monitorList
+  });
 });
 
-// Health
-app.get("/", (_, res) => {
-  res.send("UpWatch backend running 🚀");
-});
-
-/* ================= START ================= */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`Backend running on port ${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 UpWatch Enterprise Core on ${PORT}`));
